@@ -1,4 +1,4 @@
-package mpassv7.mpassv7;
+package com.br.mastercard;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -19,7 +19,7 @@ import com.mastercard.merchant.checkout.model.Postback;
 import com.mastercard.sdk.core.MasterCardApiConfig;
 import com.mastercard.sdk.core.util.QueryParams;
 
-public class Test 
+public class Api 
 {
 	private String consumerKey;
 	private String p12Path;
@@ -27,13 +27,18 @@ public class Test
 	private String checkoutId;
 	private String cartId;
 	
-	public Test(String consumerKey, String password, String checkoutId, String cartId, String p12Path)
+	public Api() throws Exception
 	{
-		this.consumerKey = consumerKey;
-		this.p12Path = p12Path;
-		this.password = password;
-		this.cartId = cartId;
-		this.checkoutId = checkoutId;
+		
+		this.consumerKey = Config.get("consumerKey").toString();
+		this.p12Path = Config.get("projectdir").toString() + Config.get("path").toString();
+		this.password = Config.get("password").toString();
+		this.cartId = Config.get("cartId").toString();
+		this.checkoutId = Config.get("checkoutId").toString();
+		
+		MasterCardApiConfig.setSandBox(true);     
+    	MasterCardApiConfig.setConsumerKey(this.consumerKey);
+    	MasterCardApiConfig.setPrivateKey(getPrivateKey());
 		
 	}
 	
@@ -59,10 +64,6 @@ public class Test
 	
     public Card getCard(String transactionId) throws Exception
     {
-    	MasterCardApiConfig.setSandBox(true);     
-    	MasterCardApiConfig.setConsumerKey(consumerKey);
-    	MasterCardApiConfig.setPrivateKey(getPrivateKey());
-    	
     	
     	QueryParams queryParams = new QueryParams()
                 .add("checkoutId", this.checkoutId)
@@ -74,11 +75,8 @@ public class Test
         return payment.getCard();
     }
     
-    public Boolean performPostback(String transactionId) throws Exception
+    public Boolean performPostback(String transactionId, String paymentCode, Boolean status) throws Exception
     {
-    	//MasterCardApiConfig.setSandBox(true);     
-    	//MasterCardApiConfig.setConsumerKey(consumerKey);
-    	//MasterCardApiConfig.setPrivateKey(getPrivateKey());
     	
     	
     	ZonedDateTime zdt = LocalDateTime.now().atZone(ZoneId.systemDefault());
@@ -86,10 +84,10 @@ public class Test
     	 
     	Postback postback = new Postback()
     	                .transactionId(transactionId)
-    	                .currency("USD")
-    	                .paymentCode("123456")
-    	                .paymentSuccessful(true)
-    	                .amount(100.00)
+    	                .currency(Config.get("currency").toString())
+    	                .paymentCode(paymentCode)
+    	                .paymentSuccessful(status)
+    	                .amount( Double.valueOf(Config.get("amount").toString()))
     	                .paymentDate(date);
     	 
     	PostbackApi.create(postback);
